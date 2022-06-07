@@ -150,10 +150,14 @@ class _MyAppState extends State<MyApp> {
                     ),
                     Expanded(
                       child: DropdownButton<BluetoothDevice>(
-                        items: _getDeviceItems(),
-                        onChanged: (value) => setState(() => _device = value),
-                        value: _device,
-                      ),
+                          items: _getDeviceItems(),
+                          value: _device,
+                          onChanged: (value) {
+                            setState(() {
+                              _device = value;
+                              print("value ${value?.name}");
+                            });
+                          }),
                     ),
                   ],
                 ),
@@ -179,11 +183,13 @@ class _MyAppState extends State<MyApp> {
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(primary: _connected ? Colors.red : Colors.green),
-                      onPressed: _connected ? _disconnect : _connect,
-                      child: Text(
-                        _connected ? 'Disconnect' : 'Connect',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      onPressed: _connect,
+                      child: Text("Connect"),
+                      // onPressed: _connected ? _disconnect : _connect,
+                      // child: Text(
+                      //   _connected ? 'Disconnect' : 'Connect',
+                      //   style: TextStyle(color: Colors.white),
+                      // ),
                     ),
                   ],
                 ),
@@ -191,8 +197,12 @@ class _MyAppState extends State<MyApp> {
                   padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 50),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(primary: Colors.brown),
-                    onPressed: () {
-                      testPrint?.sample(pathImage ?? "");
+                    onPressed: () async {
+                      if ((await bluetooth.isConnected)!) {
+                        bluetooth.printNewLine();
+
+                        bluetooth.printCustom("Smart", 2, 1);
+                      }
                     },
                     child: Text('PRINT TEST', style: TextStyle(color: Colors.white)),
                   ),
@@ -223,17 +233,21 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _connect() {
+    print("device ${_device?.name}");
     if (_device == null) {
       show('No device selected.');
     } else {
-      bluetooth.isConnected.then((isConnected) {
-        if (isConnected = false) {
-          bluetooth.connect(_device!).catchError((error) {
-            setState(() => _connected = false);
-          });
-          setState(() => _connected = true);
-        }
+      setState(() {
+        bluetooth.connect(_device!);
       });
+      // bluetooth.isConnected.then((isConnected) {
+      //   if (isConnected = false) {
+      //     bluetooth.connect(_device!).catchError((error) {
+      //       setState(() => _connected = false);
+      //     });
+      //     setState(() => _connected = true);
+      //   }
+      // });
     }
   }
 
