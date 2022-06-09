@@ -23,6 +23,8 @@ import android.util.Log;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,6 +56,7 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
+
 
 public class BlueThermalPrinterPlugin implements FlutterPlugin, ActivityAware,MethodCallHandler, RequestPermissionsResultListener {
 
@@ -258,6 +261,12 @@ public class BlueThermalPrinterPlugin implements FlutterPlugin, ActivityAware,Me
         }
         break;
 
+      case "openSettings":
+        ContextCompat.startActivity(context, new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS),
+                null);
+        result.success(true);
+        break;
+
       case "getBondedDevices":
         try {
             final String[] BLE_PERMISSIONS = new String[]{
@@ -271,7 +280,7 @@ public class BlueThermalPrinterPlugin implements FlutterPlugin, ActivityAware,Me
                     Manifest.permission.ACCESS_FINE_LOCATION,
             };
 
-            // if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if(VERSION.SDK_INT >= VERSION_CODES.S) {
 
                 if (ContextCompat.checkSelfPermission(activity,
                         Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED ||
@@ -281,25 +290,25 @@ public class BlueThermalPrinterPlugin implements FlutterPlugin, ActivityAware,Me
                                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
                     ActivityCompat.requestPermissions(activity,
-                            ANDROID_12_BLE_PERMISSIONS, 1);
+                            ANDROID_12_BLE_PERMISSIONS, 1);//Ativo
 
                     pendingResult = result;
                     break;
                 }
-            // } else {
+            } else {
 
-            //     if (ContextCompat.checkSelfPermission(activity,
-            //             Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-            //             ContextCompat.checkSelfPermission(activity,
-            //                     Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(activity,
+                        Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                        ContextCompat.checkSelfPermission(activity,
+                                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-            //         ActivityCompat.requestPermissions(activity,
-            //                 BLE_PERMISSIONS, REQUEST_COARSE_LOCATION_PERMISSIONS);
+                    ActivityCompat.requestPermissions(activity,
+                            BLE_PERMISSIONS, REQUEST_COARSE_LOCATION_PERMISSIONS);
 
-            //         pendingResult = result;
-            //         break;
-            //     }
-            // }
+                    pendingResult = result;
+                    break;
+                }
+            }
           //Original code to request permissions
           /*if (ContextCompat.checkSelfPermission(activity,
                   Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -317,7 +326,7 @@ public class BlueThermalPrinterPlugin implements FlutterPlugin, ActivityAware,Me
           result.error("Error", ex.getMessage(), exceptionToString(ex));
         }
 
-        break;
+        break;        
 
       case "connect":
         if (arguments.containsKey("address")) {
@@ -464,13 +473,6 @@ public class BlueThermalPrinterPlugin implements FlutterPlugin, ActivityAware,Me
     }
     return false;
   }
-
-//   public static void requestBlePermissions(Activity activity, int requestCode) {
-//     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-//         ActivityCompat.requestPermissions(activity, ANDROID_12_BLE_PERMISSIONS, requestCode);
-//     else
-//         ActivityCompat.requestPermissions(activity, BLE_PERMISSIONS, requestCode);
-// }
 
   private void state(Result result) {
     try {
